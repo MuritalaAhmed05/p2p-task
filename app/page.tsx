@@ -1,101 +1,174 @@
-import Image from "next/image";
-
-export default function Home() {
+'use client';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { api, Task } from '@/lib/api';
+import Link from 'next/link';
+import { PlusCircle, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+export default function HomePage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskStatus, setTaskStatus] = useState<'pending' | 'completed'>('pending');
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const fetchedTasks = await api.getTasks();
+        setTasks(fetchedTasks);
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    const task = {
+      title: taskTitle,
+      description: taskDescription,
+      status: taskStatus,
+    };
+    try {
+      const newTask = await api.createTask(task);
+      setTasks([newTask, ...tasks]);
+      setTaskTitle('');
+      setTaskDescription('');
+      setTaskStatus('pending');
+    } catch (error) {
+      console.error('Failed to create task:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Task Manager</h1>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 text-sm text-gray-500">
+              <Clock className="w-4 h-4" />
+              <span>Pending: {tasks.filter(t => t.status === 'pending').length}</span>
+            </div>
+            <div className="flex items-center space-x-1 text-sm text-gray-500">
+              <CheckCircle className="w-4 h-4" />
+              <span>Completed: {tasks.filter(t => t.status === 'completed').length}</span>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <Card className="border-2 border-gray-100 shadow-lg">
+          <CardHeader className="bg-gray-50 border-b border-gray-100">
+            <CardTitle className="flex items-center space-x-2">
+              <PlusCircle className="w-5 h-5" />
+              <span>Create New Task</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  name="title"
+                  required
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="Enter task title"
+                  className="h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-medium">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  required
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  placeholder="Enter task description"
+                  className="min-h-24 resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status" className="text-sm font-medium">
+                  Status
+                </Label>
+                <select
+                  id="status"
+                  name="status"
+                  value={taskStatus}
+                  onChange={(e) => setTaskStatus(e.target.value as 'pending' | 'completed')}
+                  className="w-full h-10 px-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {loading ? 'Creating...' : 'Create Task'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tasks.map((task) => (
+            <Card
+              key={task.id}
+              className="group hover:border-blue-200 hover:shadow-md transition-all duration-200"
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold line-clamp-1">
+                  {task.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <p className="text-gray-600 text-sm line-clamp-3">{task.description}</p>
+                <div className="mt-4 flex items-center space-x-2">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      task.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {task.status === 'completed' ? (
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                    ) : (
+                      <Clock className="w-3 h-3 mr-1" />
+                    )}
+                    {task.status}
+                  </span>
+                </div>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Link
+                  href={`/tasks/${task.id}`}
+                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 group-hover:underline"
+                >
+                  View Details
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
